@@ -4,9 +4,10 @@ const Vote = require("../models/Vote");
 const Poll = require("../models/Poll");
 const Disabled = require("../models/Disabled");
 const verifyTokenGeneral = require("../middlewares/verfiyTokenGeneral");
+const verifyTokenAdmin = require("../middlewares/verifyTokenAdmin");
 const ObjectId = require("mongodb").ObjectId;
 
-router.get("/user", async (req, res) => {
+router.get("/user", verifyTokenAdmin, async (req, res) => {
   try {
     const users = await User.find();
     res.status(200).send(users);
@@ -25,7 +26,7 @@ router.get("/user/:id", verifyTokenGeneral, async (req, res) => {
   }
 });
 
-router.get("/user/disable/:id", async (req, res) => {
+router.get("/user/disable/:id", verifyTokenAdmin, async (req, res) => {
   const id = req.params.id;
   const findUser = await User.find({ _id: id });
   if (!findUser) {
@@ -98,7 +99,7 @@ router.get("/user/disable/:id", async (req, res) => {
   }
 });
 
-router.put("/user/permissions/assign", async (req, res) => {
+router.put("/user/permissions/assign", verifyTokenAdmin, async (req, res) => {
   try {
     const findUser = await User.findOne({
       _id: new ObjectId(`${req.body.user_id}`),
@@ -124,7 +125,7 @@ router.put("/user/permissions/assign", async (req, res) => {
   }
 });
 
-router.put("/user/permissions/unassign", async (req, res) => {
+router.put("/user/permissions/unassign", verifyTokenAdmin, async (req, res) => {
   try {
     const findUser = await User.findOne({
       _id: new ObjectId(`${req.body.user_id}`),
