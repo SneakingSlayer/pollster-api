@@ -1,7 +1,7 @@
 const router = require("express").Router();
 const Permissions = require("../models/Permission");
-
-router.get("/permissions", async (req, res) => {
+const verifyTokenAdmin = require("../middlewares/verifyTokenAdmin");
+router.get("/permissions", verifyTokenAdmin, async (req, res) => {
   try {
     const permissions = await Permissions.find();
     res.status(200).json(permissions);
@@ -10,7 +10,7 @@ router.get("/permissions", async (req, res) => {
   }
 });
 
-router.post("/permissions", async (req, res) => {
+router.post("/permissions", verifyTokenAdmin, async (req, res) => {
   const permission = new Permissions({
     permission: req.body.permission,
     name: req.body.name,

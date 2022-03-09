@@ -4,7 +4,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const Poll = require("../models/Poll");
 const verifyTokenGeneral = require("../middlewares/verfiyTokenGeneral");
-router.post("/votes", async (req, res) => {
+router.post("/votes", verifyTokenGeneral, async (req, res) => {
   const addVote = new Vote({
     user_id: req.body.user_id,
     poll_id: req.body.poll_id,

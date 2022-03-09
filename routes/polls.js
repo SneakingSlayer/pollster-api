@@ -5,7 +5,7 @@ const Vote = require("../models/Vote");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const verifyTokenGeneral = require("../middlewares/verfiyTokenGeneral");
-
+const verifyTokenAdmin = require("../middlewares/verifyTokenAdmin");
 const cloudinary = require("cloudinary").v2;
 //Get all polls
 router.get("/polls", verifyTokenGeneral, async (req, res) => {
@@ -66,7 +66,7 @@ router.get("/polls/:id", verifyTokenGeneral, async (req, res) => {
 });
 
 //Create poll
-router.post("/polls", async (req, res) => {
+router.post("/polls", verifyTokenGeneral, async (req, res) => {
   const upload = await cloudinary.uploader.upload(req.body.img);
   if (!upload)
     return res
@@ -119,7 +119,7 @@ router.put("/polls/:id", verifyTokenGeneral, async (req, res) => {
 });
 
 //Delete a poll
-router.delete("/polls/:id", async (req, res) => {
+router.delete("/polls/:id", verifyTokenAdmin, async (req, res) => {
   const id = req.params.id;
   try {
     const deletePoll = await Poll.deleteOne({ _id: id });

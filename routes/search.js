@@ -1,7 +1,7 @@
 const router = require("express").Router();
 const Poll = require("../models/Poll");
-
-router.get("/search/:query", async (req, res) => {
+const verifyTokenGeneral = require("../middlewares/verfiyTokenGeneral");
+router.get("/search/:query", verifyTokenGeneral, async (req, res) => {
   try {
     const query = await Poll.find({
       title: { $regex: `.*${req.params.query}.*`, $options: "i" },
