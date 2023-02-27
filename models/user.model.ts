@@ -1,6 +1,6 @@
-const mongoose = require("mongoose");
+import mongoose from 'mongoose';
 
-const pollSchema = new mongoose.Schema({
+const userSchema = new mongoose.Schema({
   firstname: {
     type: String,
     required: true,
@@ -9,26 +9,27 @@ const pollSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  user_id: {
+  email: {
     type: String,
     required: true,
   },
-  title: {
+  username: {
     type: String,
     required: true,
   },
-  description: {
+  password: {
+    type: String,
+    minlength: 8,
+    required: true,
+  },
+  organization: {
+    type: String,
+  },
+  role: {
     type: String,
     required: true,
   },
-  img: {
-    type: String,
-  },
-  votes: {
-    type: String,
-    required: true,
-  },
-  choices: {
+  permissions: {
     type: Array,
     required: true,
   },
@@ -38,4 +39,6 @@ const pollSchema = new mongoose.Schema({
   },
 });
 
-module.exports = mongoose.model("Polls", pollSchema);
+const User = mongoose.model('Users', userSchema);
+
+export default User;

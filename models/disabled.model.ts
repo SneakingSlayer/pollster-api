@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from 'mongoose';
 
 const disabledSchema = new mongoose.Schema({
   firstname: {
@@ -35,4 +35,6 @@ const disabledSchema = new mongoose.Schema({
   },
 });
 
-module.exports = mongoose.model("Disabled", disabledSchema);
+const Disabled = mongoose.model('Disabled', disabledSchema);
+
+export default Disabled;

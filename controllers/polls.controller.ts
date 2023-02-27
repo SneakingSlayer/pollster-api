@@ -1,30 +1,26 @@
-const router = require("express").Router();
-const Poll = require("../models/Poll");
-const User = require("../models/User");
-const Vote = require("../models/Vote");
-const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
-const verifyTokenGeneral = require("../middlewares/verfiyTokenGeneral");
-const verifyTokenAdmin = require("../middlewares/verifyTokenAdmin");
-const cloudinary = require("cloudinary").v2;
-//Get all polls
-router.get("/polls", verifyTokenGeneral, async (req, res) => {
+import { Request, Response } from 'express';
+import { v2 as cloudinary } from 'cloudinary';
+
+import Poll from '../models/poll.model';
+import Vote from '../models/vote.model';
+import User from '../models/user.model';
+
+export const getPolls = async (req: Request, res: Response) => {
   try {
-    //  const polls = await Poll.find();
     const polls = await Poll.aggregate([
       {
         $project: {
-          choices: "$choices",
-          date_created: "$date_created",
-          description: "$description",
-          firstname: "$firstname",
-          lastname: "$lastname",
-          title: "$title",
-          votes: "$votes",
-          user_id: "$user_id",
-          img: "$img",
+          choices: '$choices',
+          date_created: '$date_created',
+          description: '$description',
+          firstname: '$firstname',
+          lastname: '$lastname',
+          title: '$title',
+          votes: '$votes',
+          user_id: '$user_id',
+          img: '$img',
           totalVotes: {
-            $sum: "$choices.votes",
+            $sum: '$choices.votes',
           },
         },
       },
@@ -34,14 +30,13 @@ router.get("/polls", verifyTokenGeneral, async (req, res) => {
   } catch (err) {
     res.status(400).json({ msg: err });
   }
-});
+};
 
-//Get specific poll
-router.get("/polls/:id", verifyTokenGeneral, async (req, res) => {
+export const getPoll = async (req: Request, res: Response) => {
   try {
     let total = 0;
     const poll = await Poll.find({ _id: req.params.id });
-    const voteMap = poll[0].choices.map((choice) => {
+    const voteMap = poll[0].choices.map((choice: { votes: string }) => {
       total += parseInt(choice.votes);
     });
 
@@ -63,17 +58,16 @@ router.get("/polls/:id", verifyTokenGeneral, async (req, res) => {
   } catch (err) {
     res.status(400).json({ msg: err });
   }
-});
+};
 
-//Create poll
-router.post("/polls", verifyTokenGeneral, async (req, res) => {
+export const createPoll = async (req: Request, res: Response) => {
   const upload = await cloudinary.uploader.upload(req.body.img);
   if (!upload)
     return res
       .status(500)
-      .json({ msg: "There was a problem with your request." });
+      .json({ msg: 'There was a problem with your request.' });
   const user = await User.findOne({ _id: req.body.user_id });
-  if (!user) return res.status(400).json({ msg: "No user found." });
+  if (!user) return res.status(400).json({ msg: 'No user found.' });
   const poll = new Poll({
     firstname: user.firstname,
     lastname: user.lastname,
@@ -88,46 +82,42 @@ router.post("/polls", verifyTokenGeneral, async (req, res) => {
 
   try {
     const savePoll = await poll.save();
-    res.status(200).json({ msg: "Poll successfully posted." });
+    res.status(200).json({ msg: 'Poll successfully posted.' });
   } catch (err) {
     res.status(400).json({ msg: err });
   }
-});
+};
 
-//Update vote count
-router.put("/polls/:id", verifyTokenGeneral, async (req, res) => {
+export const updatePoll = async (req: Request, res: Response) => {
   const poll = await Poll.findOne({ _id: req.params.id });
   const currentCount = poll.choices.filter(
-    (choice) => choice.idx === req.body.idx
+    (choice: { idx: string }) => choice.idx === req.body.idx
   );
   const query = {
     _id: req.params.id,
-    "choices.idx": req.body.idx,
+    'choices.idx': req.body.idx,
   };
   const update = {
     $set: {
-      "choices.$.votes": parseInt(currentCount[0].votes) + 1,
+      'choices.$.votes': parseInt(currentCount[0].votes) + 1,
     },
   };
 
   try {
     const voteUpdate = await Poll.updateOne(query, update);
-    res.status(200).json({ msg: "Votes successfully updated." });
+    res.status(200).json({ msg: 'Votes successfully updated.' });
   } catch (err) {
     res.status(400).json({ msg: err });
   }
-});
+};
 
-//Delete a poll
-router.delete("/polls/:id", verifyTokenAdmin, async (req, res) => {
+export const deletePoll = async (req: Request, res: Response) => {
   const id = req.params.id;
   try {
     const deletePoll = await Poll.deleteOne({ _id: id });
     const deleteVotes = await Vote.deleteMany({ poll_id: id });
-    res.status(200).json({ msg: "Polls and votes successfully deleted." });
+    res.status(200).json({ msg: 'Polls and votes successfully deleted.' });
   } catch (err) {
     res.status(400).json({ msg: err });
   }
-});
-
-module.exports = router;
+};
