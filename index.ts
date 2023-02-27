@@ -1,10 +1,13 @@
 import express, { json } from 'express';
 import mongoose from 'mongoose';
-import dotenv from 'dotenv';
+import * as dotenv from 'dotenv';
 import cors from 'cors';
 import bodyParser from 'body-parser';
 import path from 'path';
 import { v2 as cloudinary } from 'cloudinary';
+import { ConnectionOptions } from 'tls';
+
+import { MONGO_URI } from './constants/constants';
 
 import indexRoute from './routes/index.routes';
 import authRoute from './routes/auth.routes';
@@ -13,9 +16,8 @@ import votesRoute from './routes/votes.routes';
 import usersRoute from './routes/user.routes';
 import searchRoute from './routes/search.routes';
 import permissionsRoute from './routes/permission.routes';
-import { ConnectionOptions } from 'tls';
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 6000;
 const app = express();
 dotenv.config();
 
@@ -26,7 +28,7 @@ cloudinary.config({
 });
 
 mongoose.connect(
-  process.env.DB_CONNECT || process.env.MONGO_URI,
+  MONGO_URI,
   { useNewUrlParser: true, useUnifiedTopology: true } as ConnectionOptions,
   () => console.log('Mongo Connected')
 );

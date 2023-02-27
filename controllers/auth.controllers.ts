@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import User from '../models/user.model';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import { ADMIN_TOKEN, USER_TOKEN } from '../constants/constants';
 
 export const signIn = async (req: Request, res: Response) => {
   const checkUsername = await User.findOne({ username: req.body.username });
@@ -15,7 +16,7 @@ export const signIn = async (req: Request, res: Response) => {
     return res.status(400).json({ status: 400, msg: 'Incorrect password.' });
 
   if (checkUsername.role === 'student') {
-    const token = jwt.sign({ _id: checkUsername._id }, process.env.USER_TOKEN, {
+    const token = jwt.sign({ _id: checkUsername._id }, USER_TOKEN, {
       expiresIn: '3d',
     });
     res.header('token', token).json({
@@ -26,13 +27,9 @@ export const signIn = async (req: Request, res: Response) => {
     });
   }
   if (checkUsername.role === 'admin') {
-    const token = jwt.sign(
-      { _id: checkUsername._id },
-      process.env.ADMIN_TOKEN,
-      {
-        expiresIn: '3d',
-      }
-    );
+    const token = jwt.sign({ _id: checkUsername._id }, ADMIN_TOKEN, {
+      expiresIn: '3d',
+    });
     res.header('token', token).json({
       token: token,
       role: checkUsername.role,

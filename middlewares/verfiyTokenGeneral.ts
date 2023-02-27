@@ -1,6 +1,7 @@
 import { Response, Request, NextFunction } from 'express';
 
 import jwt from 'jsonwebtoken';
+import { ADMIN_TOKEN, USER_TOKEN } from '../constants/constants';
 
 const verifyTokenGeneral = (
   req: Request,
@@ -12,9 +13,9 @@ const verifyTokenGeneral = (
     return res.status(403).json({ msg: 'Authorization is null.' });
   }
   const bearer = bearerHeader;
-  jwt.verify(bearer, process.env.USER_TOKEN, (err, ver) => {
+  jwt.verify(bearer, USER_TOKEN, (err, ver) => {
     if (err) {
-      jwt.verify(bearer, process.env.ADMIN_TOKEN, (err, ver) => {
+      jwt.verify(bearer, ADMIN_TOKEN, (err, ver) => {
         if (err) {
           res.status(403).json({ msg: err });
         } else {
