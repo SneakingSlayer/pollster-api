@@ -1,22 +1,19 @@
-const router = require("express").Router();
-const User = require("../models/User");
-const Vote = require("../models/Vote");
-const Poll = require("../models/Poll");
-const Disabled = require("../models/Disabled");
-const verifyTokenGeneral = require("../middlewares/verfiyTokenGeneral");
-const verifyTokenAdmin = require("../middlewares/verifyTokenAdmin");
-const ObjectId = require("mongodb").ObjectId;
+import { Request, Response } from 'express';
+import User from '../models/user.model';
+import Vote from '../models/vote.model';
+import Poll from '../models/poll.model';
+import Disabled from '../models/disabled.model';
 
-router.get("/user", verifyTokenAdmin, async (req, res) => {
+export const getUsers = async (req: Request, res: Response) => {
   try {
     const users = await User.find();
     res.status(200).send(users);
   } catch (err) {
     res.status(400).json({ msg: err });
   }
-});
+};
 
-router.get("/user/:id", verifyTokenGeneral, async (req, res) => {
+export const getUser = async (req: Request, res: Response) => {
   const id = req.params.id;
   try {
     const findUser = await User.find({ _id: id });
@@ -24,19 +21,19 @@ router.get("/user/:id", verifyTokenGeneral, async (req, res) => {
   } catch (err) {
     res.status(400).json({ msg: err });
   }
-});
+};
 
-router.get("/user/disable/:id", verifyTokenAdmin, async (req, res) => {
+export const disableUser = async (req: Request, res: Response) => {
   const id = req.params.id;
   const findUser = await User.find({ _id: id });
   if (!findUser) {
-    res.status(404).json({ msg: "User not found." });
+    res.status(404).json({ msg: 'User not found.' });
     return;
   }
 
   const findVotes = await Vote.find({ user_id: id });
   if (!findVotes) {
-    res.status(404).json({ msg: "No votes found" });
+    res.status(404).json({ msg: 'No votes found' });
     return;
   }
 
@@ -48,19 +45,19 @@ router.get("/user/disable/:id", verifyTokenAdmin, async (req, res) => {
   for (let j = 0; j < findVotes.length; j++) {
     const poll = await Poll.findOne({ _id: findVotes[j].poll_id });
     if (!poll) {
-      res.status(404).json({ msg: "Not found" });
+      res.status(404).json({ msg: 'Not found' });
       return;
     }
     const currentCount = poll.choices.filter(
-      (choice) => choice.idx === findVotes[j].choice
+      (choice: { idx: string }) => choice.idx === findVotes[j].choice
     );
     const query = {
       _id: findVotes[j].poll_id,
-      "choices.idx": findVotes[j].choice,
+      'choices.idx': findVotes[j].choice,
     };
     const update = {
       $set: {
-        "choices.$.votes": parseInt(currentCount[0].votes) - 1,
+        'choices.$.votes': parseInt(currentCount[0].votes) - 1,
       },
     };
 
@@ -71,9 +68,9 @@ router.get("/user/disable/:id", verifyTokenAdmin, async (req, res) => {
       const voteDelete = await Vote.deleteOne({
         user_id: findVotes[j].user_id,
       });
-      console.log("ok");
+      console.log('ok');
     } catch (err) {
-      res.status(400).json({ msg: "first error" });
+      res.status(400).json({ msg: 'first error' });
       return;
     }
   }
@@ -83,8 +80,8 @@ router.get("/user/disable/:id", verifyTokenAdmin, async (req, res) => {
     lastname: findUser[0].lastname,
     email: findUser[0].email,
     username: findUser[0].username,
-    organization: "MCM",
-    role: "student",
+    organization: 'MCM',
+    role: 'student',
     password: findUser[0].password,
     date_created: Date.now(),
   });
@@ -92,65 +89,63 @@ router.get("/user/disable/:id", verifyTokenAdmin, async (req, res) => {
   try {
     const block = await user.save(user);
     const disable = await User.deleteOne({ _id: findUser[0]._id });
-    res.status(200).json({ msg: "Successfully disabled user." });
+    res.status(200).json({ msg: 'Successfully disabled user.' });
   } catch (err) {
     console.log(err);
-    res.status(400).json({ msg: "last error", user: user });
+    res.status(400).json({ msg: 'last error', user: user });
   }
-});
+};
 
-router.put("/user/permissions/assign", verifyTokenAdmin, async (req, res) => {
+export const assignPermission = async (req: Request, res: Response) => {
   try {
     const findUser = await User.findOne({
-      _id: new ObjectId(`${req.body.user_id}`),
+      _id: req.body.user_id,
     });
     const findPermission = await User.find({
       _id: req.body.user_id,
       permissions: { $in: [req.body.permission] },
     }).count();
     if (findPermission > 0)
-      return res.status(200).json({ msg: "User has this permission." });
-    const query = { _id: new ObjectId(`${req.body.user_id}`) };
+      return res.status(200).json({ msg: 'User has this permission.' });
+    const query = { _id: req.body.user_id };
     const addPermission = {
       $push: { permissions: req.body.permission },
     };
     try {
       const permission = await User.updateOne(query, addPermission);
-      res.status(200).json({ msg: "Permission successfully added." });
+      res.status(200).json({ msg: 'Permission successfully added.' });
     } catch (err) {
-      res.status(400).json({ msg: "There was a problem with your request." });
+      res.status(400).json({ msg: 'There was a problem with your request.' });
     }
   } catch (err) {
-    res.status(404).json({ msg: "No users found." });
+    res.status(404).json({ msg: 'No users found.' });
   }
-});
+};
 
-router.put("/user/permissions/unassign", verifyTokenAdmin, async (req, res) => {
+export const unassignPermission = async (req: Request, res: Response) => {
   try {
     const findUser = await User.findOne({
-      _id: new ObjectId(`${req.body.user_id}`),
+      _id: req.body.user_id,
     });
     const findPermission = await User.find({
       _id: req.body.user_id,
       permissions: { $in: [req.body.permission] },
     }).count();
-    if (!findPermission > 0)
+    if (!findPermission)
       return res
         .status(200)
-        .json({ msg: "User does not have this permission." });
-    const query = { _id: new ObjectId(`${req.body.user_id}`) };
+        .json({ msg: 'User does not have this permission.' });
+    const query = { _id: req.body.user_id };
     const addPermission = {
       $pull: { permissions: req.body.permission },
     };
     try {
       const permission = await User.updateOne(query, addPermission);
-      res.status(200).json({ msg: "Permission successfully removed." });
+      res.status(200).json({ msg: 'Permission successfully removed.' });
     } catch (err) {
-      res.status(400).json({ msg: "There was a problem with your request." });
+      res.status(400).json({ msg: 'There was a problem with your request.' });
     }
   } catch (err) {
-    res.status(404).json({ msg: "No users found." });
+    res.status(404).json({ msg: 'No users found.' });
   }
-});
-
-module.exports = router;
+};
