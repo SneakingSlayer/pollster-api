@@ -2,7 +2,12 @@ import { Request, Response } from 'express';
 import User from '../models/user.model';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import { ADMIN_TOKEN, USER_TOKEN } from '../constants/constants';
+import {
+  ADMIN_TOKEN,
+  ORGANIZATION,
+  ROLES,
+  USER_TOKEN,
+} from '../constants/constants';
 
 export const signIn = async (req: Request, res: Response) => {
   const checkUsername = await User.findOne({ username: req.body.username });
@@ -45,20 +50,18 @@ export const signUp = async (req: Request, res: Response) => {
   const hashPass = await bcrypt.hash(req.body.password, salt);
   const checkEmail = await User.findOne({ email: req.body.email });
   const checkUsername = await User.findOne({ username: req.body.username });
-  if (checkEmail)
-    return res.status(400).json({ status: 400, msg: 'Email already exists.' });
+
+  if (checkEmail) return res.status(400).json({ msg: 'Email already exists.' });
   if (checkUsername)
-    return res
-      .status(400)
-      .json({ status: 400, msg: 'Username already exists.' });
+    return res.status(400).json({ msg: 'Username already exists.' });
 
   const user = new User({
     firstname: req.body.firstname,
     lastname: req.body.lastname,
     email: req.body.email,
     username: req.body.username,
-    organization: 'MCM',
-    role: 'student',
+    organization: ORGANIZATION.abbrv,
+    role: ROLES.student,
     permissions: [],
     password: hashPass,
     date_created: Date.now(),
@@ -67,11 +70,10 @@ export const signUp = async (req: Request, res: Response) => {
   try {
     const savedUser = await user.save();
     res.status(200).json({
-      status: 200,
       msg: `${req.body.username} successfully registered!`,
     });
   } catch (err) {
     console.log('error');
-    res.status(400).json({ status: 400, msg: err });
+    res.status(400).json({ msg: err });
   }
 };

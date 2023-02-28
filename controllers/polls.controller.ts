@@ -35,26 +35,12 @@ export const getPolls = async (req: Request, res: Response) => {
 export const getPoll = async (req: Request, res: Response) => {
   try {
     let total = 0;
-    const poll = await Poll.find({ _id: req.params.id });
+    const poll = await Poll.findOne({ _id: req.params.id });
     const voteMap = poll[0].choices.map((choice: { votes: string }) => {
       total += parseInt(choice.votes);
     });
 
-    res.status(200).json([
-      {
-        _id: poll[0]._id,
-        choices: poll[0].choices,
-        date_created: poll[0].date_created,
-        description: poll[0].description,
-        firstname: poll[0].firstname,
-        lastname: poll[0].lastname,
-        title: poll[0].title,
-        votes: poll[0].votes,
-        user_id: poll[0].user_id,
-        img: poll[0].img,
-        totalVotes: total,
-      },
-    ]);
+    res.status(200).json([poll]);
   } catch (err) {
     res.status(400).json({ msg: err });
   }
