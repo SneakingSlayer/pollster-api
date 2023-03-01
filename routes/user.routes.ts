@@ -1,6 +1,8 @@
 import express from 'express';
+
 import verifyTokenAdmin from '../middlewares/verifyTokenAdmin';
 import verifyTokenGeneral from '../middlewares/verfiyTokenGeneral';
+
 import {
   getUsers,
   getUser,
@@ -9,12 +11,24 @@ import {
   unassignPermission,
 } from '../controllers/user.controller';
 
+import {
+  USER_ROUTE,
+  USER_BY_ID_ROUTE,
+  USER_DISABLE_ROUTE,
+  USER_PERMISSION_ASSIGN_ROUTE,
+  USER_PERMISSION_UNASSIGN_ROUTE,
+} from '../constants/routes';
+
 const router = express.Router();
 
-router.get('/user', verifyTokenAdmin, getUsers);
-router.get('/user/:id', verifyTokenGeneral, getUser);
-router.get('/user/disable/:id', verifyTokenAdmin, disableUser);
-router.put('/user/permissions/assign', verifyTokenAdmin, assignPermission);
-router.put('/user/permissions/unassign', verifyTokenAdmin, unassignPermission);
+router.get(USER_ROUTE, verifyTokenAdmin, getUsers);
+router.get(USER_BY_ID_ROUTE, verifyTokenGeneral, getUser);
+router.get(USER_DISABLE_ROUTE, verifyTokenAdmin, disableUser);
+router.put(USER_PERMISSION_ASSIGN_ROUTE, verifyTokenAdmin, assignPermission);
+router.put(
+  USER_PERMISSION_UNASSIGN_ROUTE,
+  verifyTokenAdmin,
+  unassignPermission
+);
 
 export default router;

@@ -1,6 +1,8 @@
 import express from 'express';
+
 import verifyTokenAdmin from '../middlewares/verifyTokenAdmin';
 import verifyTokenGeneral from '../middlewares/verfiyTokenGeneral';
+
 import {
   getPolls,
   getPoll,
@@ -9,12 +11,14 @@ import {
   deletePoll,
 } from '../controllers/polls.controller';
 
+import { POLLS_ROUTE, POLLS_BY_ID_ROUTE } from '../constants/routes';
+
 const router = express.Router();
 
-router.get('/polls', verifyTokenGeneral, getPolls);
-router.get('/polls/:id', verifyTokenGeneral, getPoll);
-router.post('/polls', verifyTokenGeneral, createPoll);
-router.put('/polls/:id', verifyTokenGeneral, updatePoll);
-router.delete('/polls/:id', verifyTokenAdmin, deletePoll);
+router.get(POLLS_ROUTE, verifyTokenGeneral, getPolls);
+router.get(POLLS_BY_ID_ROUTE, verifyTokenGeneral, getPoll);
+router.post(POLLS_ROUTE, verifyTokenGeneral, createPoll);
+router.put(POLLS_BY_ID_ROUTE, verifyTokenGeneral, updatePoll);
+router.delete(POLLS_BY_ID_ROUTE, verifyTokenAdmin, deletePoll);
 
 export default router;
