@@ -5,28 +5,25 @@ import Poll from '../models/poll.model';
 import Vote from '../models/vote.model';
 import User from '../models/user.model';
 
+// TODO: Implement pagination
 export const getPolls = async (req: Request, res: Response) => {
   try {
+    const { page = 1, limit = 10 } = req.params;
+
     const polls = await Poll.aggregate([
-      {
-        $project: {
-          choices: '$choices',
-          date_created: '$date_created',
-          description: '$description',
-          firstname: '$firstname',
-          lastname: '$lastname',
-          title: '$title',
-          votes: '$votes',
-          user_id: '$user_id',
-          img: '$img',
-          totalVotes: {
-            $sum: '$choices.votes',
-          },
-        },
-      },
-      { $sort: { date_created: -1 } },
-    ]);
-    res.status(200).json(polls);
+      { $addFields: { totalVotes: { $sum: '$choices.votes' } } },
+    ])
+      .limit((limit as number) * 1)
+      .skip(((page as number) - 1) * (limit as number))
+      .sort({ createdAt: -1 });
+
+    const count = await Poll.countDocuments();
+
+    res.status(200).json({
+      polls,
+      totalPages: Math.ceil(count / (limit as number)),
+      currentPage: parseInt(page as string),
+    });
   } catch (err) {
     res.status(400).json({ msg: err });
   }
@@ -34,50 +31,35 @@ export const getPolls = async (req: Request, res: Response) => {
 
 export const getPoll = async (req: Request, res: Response) => {
   try {
-    let total = 0;
     const poll = await Poll.findOne({ _id: req.params.id });
-    const voteMap = poll[0].choices.map((choice: { votes: string }) => {
-      total += parseInt(choice.votes);
-    });
+    console.log(poll);
+    const total = poll.choices
+      .map((choice: { votes: number }) => choice.votes)
+      .reduce((prev: number, curr: number) => {
+        return prev + curr;
+      });
 
-    res.status(200).json([
-      {
-        _id: poll[0]._id,
-        choices: poll[0].choices,
-        date_created: poll[0].date_created,
-        description: poll[0].description,
-        firstname: poll[0].firstname,
-        lastname: poll[0].lastname,
-        title: poll[0].title,
-        votes: poll[0].votes,
-        user_id: poll[0].user_id,
-        img: poll[0].img,
-        totalVotes: total,
-      },
-    ]);
+    res.status(200).json({
+      ...poll.toObject(),
+      totalVotes: total,
+    });
   } catch (err) {
     res.status(400).json({ msg: err });
   }
 };
 
 export const createPoll = async (req: Request, res: Response) => {
-  const upload = await cloudinary.uploader.upload(req.body.img);
+  /*const upload = await cloudinary.uploader.upload(req.body.img);
   if (!upload)
     return res
       .status(500)
-      .json({ msg: 'There was a problem with your request.' });
+      .json({ msg: 'There was a problem with your request.' });*/
   const user = await User.findOne({ _id: req.body.user_id });
   if (!user) return res.status(400).json({ msg: 'No user found.' });
   const poll = new Poll({
+    ...req.body,
     firstname: user.firstname,
     lastname: user.lastname,
-    user_id: req.body.user_id,
-    title: req.body.title,
-    description: req.body.description,
-    img: upload.url,
-    votes: req.body.votes,
-    choices: req.body.choices,
-    date_created: Date.now(),
   });
 
   try {
