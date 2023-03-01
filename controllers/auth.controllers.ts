@@ -45,7 +45,7 @@ export const signIn = async (req: Request, res: Response) => {
 };
 
 export const signUp = async (req: Request, res: Response) => {
-  console.log('triggered');
+  console.log(req.body);
   const salt = await bcrypt.genSalt(10);
   const hashPass = await bcrypt.hash(req.body.password, salt);
   const checkEmail = await User.findOne({ email: req.body.email });
@@ -64,7 +64,6 @@ export const signUp = async (req: Request, res: Response) => {
     role: ROLES.student,
     permissions: [],
     password: hashPass,
-    date_created: Date.now(),
   });
 
   try {

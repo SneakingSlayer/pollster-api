@@ -40,7 +40,21 @@ export const getPoll = async (req: Request, res: Response) => {
       total += parseInt(choice.votes);
     });
 
-    res.status(200).json([poll]);
+    res.status(200).json([
+      {
+        _id: poll[0]._id,
+        choices: poll[0].choices,
+        date_created: poll[0].date_created,
+        description: poll[0].description,
+        firstname: poll[0].firstname,
+        lastname: poll[0].lastname,
+        title: poll[0].title,
+        votes: poll[0].votes,
+        user_id: poll[0].user_id,
+        img: poll[0].img,
+        totalVotes: total,
+      },
+    ]);
   } catch (err) {
     res.status(400).json({ msg: err });
   }

@@ -1,6 +1,5 @@
 import express, { json } from 'express';
 import mongoose from 'mongoose';
-import * as dotenv from 'dotenv';
 import cors from 'cors';
 import bodyParser from 'body-parser';
 import path from 'path';
@@ -24,7 +23,6 @@ import permissionsRoute from './routes/permission.routes';
 
 const PORT = process.env.PORT || 6000;
 const app = express();
-dotenv.config();
 
 cloudinary.config({
   cloud_name: CLOUDINARY_NAME,
@@ -35,7 +33,13 @@ cloudinary.config({
 mongoose.connect(
   MONGO_URI,
   { useNewUrlParser: true, useUnifiedTopology: true } as ConnectionOptions,
-  () => console.log('Mongo Connected')
+  (err) => {
+    if (err) {
+      console.log(err);
+    } else {
+      console.log('MONGO CONNECTED');
+    }
+  }
 );
 
 app.use(express.json({ limit: '50mb' }));
