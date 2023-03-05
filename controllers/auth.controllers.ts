@@ -12,18 +12,20 @@ export const signIn = async (req: Request, res: Response) => {
     const checkUser = await User.findOne({
       $or: [{ username: req.body.username }, { email: req.body.username }],
     });
-    if (!checkUser) throw 'Invalid username or password.';
+    if (!checkUser)
+      throw { msg: 'Incorrect email or username.', fieldName: 'username' };
 
     const checkPass = await bcrypt.compare(
       req.body.password,
       checkUser.password
     );
-    if (!checkPass) throw 'Invalid password.';
+    if (!checkPass) throw { msg: 'Incorrect password.', fieldName: 'password' };
 
     const { token: secret } = checkRole(checkUser.role);
     const token = jwt.sign({ _id: checkUser._id }, secret, {
       expiresIn: '3d',
     });
+
     res.header('token', token).json({
       token: token,
       role: checkUser.role,

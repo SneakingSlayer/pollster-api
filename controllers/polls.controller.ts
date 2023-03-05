@@ -8,14 +8,16 @@ import User from '../models/user.model';
 // TODO: Implement pagination
 export const getPolls = async (req: Request, res: Response) => {
   try {
-    const { page = 1, limit = 10 } = req.params;
-
+    const { page = 1, limit = 5 } = req.query;
     const polls = await Poll.aggregate([
       { $addFields: { totalVotes: { $sum: '$choices.votes' } } },
-    ])
-      .limit((limit as number) * 1)
+      { $sort: { createdAt: -1 } },
+      { $skip: ((page as number) - 1) * (limit as number) },
+      { $limit: (limit as number) * 1 },
+    ]);
+    /* .limit((limit as number) * 1)
       .skip(((page as number) - 1) * (limit as number))
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 });*/
 
     const count = await Poll.countDocuments();
 
@@ -64,7 +66,7 @@ export const createPoll = async (req: Request, res: Response) => {
 
   try {
     const savePoll = await poll.save();
-    res.status(200).json({ msg: 'Poll successfully posted.' });
+    res.status(200).json(savePoll);
   } catch (err) {
     res.status(400).json({ msg: err });
   }
