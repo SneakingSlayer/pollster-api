@@ -43,8 +43,17 @@ export const signUp = async (req: Request, res: Response) => {
     const hashPass = await bcrypt.hash(req.body.password, salt);
     const checkEmail = await User.findOne({ email: req.body.email });
     const checkUsername = await User.findOne({ username: req.body.username });
-    if (checkEmail) throw 'Email already exists.';
-    if (checkUsername) throw 'Username already exists.';
+    let fieldErrors = [];
+    if (checkEmail) {
+      fieldErrors.push({ msg: 'Email already exists.', fieldName: 'email' });
+    }
+    if (checkUsername) {
+      fieldErrors.push({
+        msg: 'Username already exists.',
+        fieldName: 'username',
+      });
+    }
+    if (fieldErrors?.length > 0) throw fieldErrors;
     const user = new User({
       ...req.body,
       organization: ORGANIZATION.abbrv,
