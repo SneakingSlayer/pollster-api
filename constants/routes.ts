@@ -20,3 +20,4 @@ export const USER_PERMISSION_UNASSIGN_ROUTE =
 
 export const VOTES_ROUTE = BASE_URL + '/votes';
 export const VOTES_BY_ID_ROUTE = BASE_URL + '/votes/:id';
+export const VOTES_BY_USER_ROUTE = BASE_URL + '/votes/user/:id';
