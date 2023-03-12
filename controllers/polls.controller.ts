@@ -15,9 +15,6 @@ export const getPolls = async (req: Request, res: Response) => {
       { $skip: ((page as number) - 1) * (limit as number) },
       { $limit: (limit as number) * 1 },
     ]);
-    /* .limit((limit as number) * 1)
-      .skip(((page as number) - 1) * (limit as number))
-      .sort({ createdAt: -1 });*/
 
     const count = await Poll.countDocuments();
 
@@ -103,5 +100,27 @@ export const deletePoll = async (req: Request, res: Response) => {
     res.status(200).json({ msg: 'Polls and votes successfully deleted.' });
   } catch (err) {
     res.status(400).json({ msg: err });
+  }
+};
+
+export const getTopPolls = async (req: Request, res: Response) => {
+  try {
+    const result = await Vote.aggregate([
+      { $group: { _id: '$poll_id', count: { $sum: 1 } } },
+      {
+        $project: {
+          _id: 0,
+          poll_id: '$_id',
+          count: 1,
+        },
+      },
+      { $sort: { count: -1 } },
+      { $limit: 10 },
+    ]);
+    const pollIds = result?.map((poll) => poll.poll_id);
+    const polls = await Poll.find({ _id: { $in: pollIds } });
+    res.status(200).json(polls);
+  } catch (error) {
+    res.status(400).json({ msg: error });
   }
 };

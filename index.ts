@@ -21,7 +21,7 @@ import usersRoute from './routes/user.routes';
 import searchRoute from './routes/search.routes';
 import permissionsRoute from './routes/permission.routes';
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5500;
 const app = express();
 
 cloudinary.config({

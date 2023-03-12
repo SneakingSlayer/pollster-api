@@ -23,7 +23,7 @@ const router = express.Router();
 
 router.get(USER_ROUTE, verifyTokenAdmin, getUsers);
 router.get(USER_BY_ID_ROUTE, verifyTokenGeneral, getUser);
-router.get(USER_DISABLE_ROUTE, verifyTokenAdmin, disableUser);
+router.delete(USER_DISABLE_ROUTE, verifyTokenAdmin, disableUser);
 router.put(USER_PERMISSION_ASSIGN_ROUTE, verifyTokenAdmin, assignPermission);
 router.put(
   USER_PERMISSION_UNASSIGN_ROUTE,

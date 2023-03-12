@@ -7,6 +7,7 @@ export const PERMISSIONS_ROUTE = BASE_URL + '/permissions';
 
 export const POLLS_ROUTE = BASE_URL + '/polls';
 export const POLLS_BY_ID_ROUTE = BASE_URL + '/polls/:id';
+export const POLLS_TOP = BASE_URL + '/top/polls';
 
 export const SEARCH_ROUTE = BASE_URL + '/search/:query';
 
