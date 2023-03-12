@@ -3,11 +3,22 @@ import User from '../models/user.model';
 import Vote from '../models/vote.model';
 import Poll from '../models/poll.model';
 import Disabled from '../models/disabled.model';
+import { ROLES } from '../constants/constants';
 
 export const getUsers = async (req: Request, res: Response) => {
   try {
-    const users = await User.find();
-    res.status(200).send(users);
+    const { page = 1, limit = 10 } = req.query;
+    const users = await User.find()
+      .sort({ createdAt: -1 })
+      .skip(((page as number) - 1) * (limit as number))
+      .limit((limit as number) * 1);
+
+    const count = await User.countDocuments();
+    res.status(200).json({
+      users,
+      totalPages: Math.ceil(count / (limit as number)),
+      currentPage: parseInt(page as string),
+    });
   } catch (err) {
     res.status(400).json({ msg: err });
   }
@@ -24,75 +35,19 @@ export const getUser = async (req: Request, res: Response) => {
 };
 
 export const disableUser = async (req: Request, res: Response) => {
-  const id = req.params.id;
-  const findUser = await User.find({ _id: id });
-  if (!findUser) {
-    res.status(404).json({ msg: 'User not found.' });
-    return;
-  }
-
-  const findVotes = await Vote.find({ user_id: id });
-  if (!findVotes) {
-    res.status(404).json({ msg: 'No votes found' });
-    return;
-  }
-
-  let userPolls = [];
-  for (let i = 0; i < findVotes.length; i++) {
-    userPolls.push(findVotes[i].poll_id);
-  }
-
-  for (let j = 0; j < findVotes.length; j++) {
-    const poll = await Poll.findOne({ _id: findVotes[j].poll_id });
-    if (!poll) {
-      res.status(404).json({ msg: 'Not found' });
-      return;
-    }
-    const currentCount = poll.choices.filter(
-      (choice: { idx: string }) => choice.idx === findVotes[j].choice
-    );
-    const query = {
-      _id: findVotes[j].poll_id,
-      'choices.idx': findVotes[j].choice,
-    };
-    const update = {
-      $set: {
-        'choices.$.votes': parseInt(currentCount[0].votes) - 1,
-      },
-    };
-
-    console.log({ user_id: findVotes[j].user_id });
-
-    try {
-      const voteUpdate = await Poll.updateOne(query, update);
-      const voteDelete = await Vote.deleteOne({
-        user_id: findVotes[j].user_id,
-      });
-      console.log('ok');
-    } catch (err) {
-      res.status(400).json({ msg: 'first error' });
-      return;
-    }
-  }
-
-  const user = new Disabled({
-    firstname: findUser[0].firstname,
-    lastname: findUser[0].lastname,
-    email: findUser[0].email,
-    username: findUser[0].username,
-    organization: 'MCM',
-    role: 'student',
-    password: findUser[0].password,
-    date_created: Date.now(),
-  });
-
   try {
-    const block = await user.save(user);
-    const disable = await User.deleteOne({ _id: findUser[0]._id });
-    res.status(200).json({ msg: 'Successfully disabled user.' });
-  } catch (err) {
-    console.log(err);
-    res.status(400).json({ msg: 'last error', user: user });
+    const { id } = req.params;
+    const findUser = await User.findOne({ _id: id });
+
+    if (!findUser) return res.status(404).json({ msg: 'User not found.' });
+    const newDisabled = new Disabled({ ...findUser._doc });
+    const saveDisabled = await newDisabled.save();
+    const deleteUser = await User.deleteOne({ _id: id });
+    console.log(deleteUser);
+    res.status(200).json({ msg: 'User removed.' });
+  } catch (error) {
+    console.log(error);
+    return res.status(400).json({ msg: error });
   }
 };
 
@@ -110,15 +65,12 @@ export const assignPermission = async (req: Request, res: Response) => {
     const query = { _id: req.body.user_id };
     const addPermission = {
       $push: { permissions: req.body.permission },
+      role: ROLES.admin,  
     };
-    try {
-      const permission = await User.updateOne(query, addPermission);
-      res.status(200).json({ msg: 'Permission successfully added.' });
-    } catch (err) {
-      res.status(400).json({ msg: 'There was a problem with your request.' });
-    }
-  } catch (err) {
-    res.status(404).json({ msg: 'No users found.' });
+    const permission = await User.updateOne(query, addPermission);
+    res.status(200).json({ msg: 'Permission successfully added.' });
+  } catch (error) {
+    res.status(404).json({ msg: error });
   }
 };
 
@@ -139,13 +91,10 @@ export const unassignPermission = async (req: Request, res: Response) => {
     const addPermission = {
       $pull: { permissions: req.body.permission },
     };
-    try {
-      const permission = await User.updateOne(query, addPermission);
-      res.status(200).json({ msg: 'Permission successfully removed.' });
-    } catch (err) {
-      res.status(400).json({ msg: 'There was a problem with your request.' });
-    }
-  } catch (err) {
-    res.status(404).json({ msg: 'No users found.' });
+
+    const permission = await User.updateOne(query, addPermission);
+    res.status(200).json({ msg: 'Permission successfully removed.' });
+  } catch (error) {
+    res.status(404).json({ msg: error });
   }
 };
