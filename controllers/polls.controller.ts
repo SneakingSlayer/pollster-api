@@ -48,17 +48,15 @@ export const getPoll = async (req: Request, res: Response) => {
 };
 
 export const createPoll = async (req: Request, res: Response) => {
-  /*const upload = await cloudinary.uploader.upload(req.body.img);
-  if (!upload)
-    return res
-      .status(500)
-      .json({ msg: 'There was a problem with your request.' });*/
+  const upload = await cloudinary.uploader.upload(req.body.img);
+  console.log(upload);
   const user = await User.findOne({ _id: req.body.user_id });
   if (!user) return res.status(400).json({ msg: 'No user found.' });
   const poll = new Poll({
     ...req.body,
     firstname: user.firstname,
     lastname: user.lastname,
+    img: upload.url,
   });
 
   try {
